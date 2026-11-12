@@ -1,0 +1,61 @@
+{% extends 'hub_settings/_layout.html' %}
+
+{% block title %}People · Settings{% endblock %}
+
+{% block section %}
+<style>
+    .hc-sw { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hc-sw label { position: relative; width: 34px; height: 34px; cursor: pointer; }
+    .hc-sw input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+    .hc-sw span { position: absolute; inset: 4px; border-radius: 9px; background: var(--c); }
+    .hc-sw input:checked + span { inset: 0; outline: 2px solid #eef3fa; outline-offset: 2px; }
+    .hc-sw input:focus-visible + span { outline: 2px solid var(--acc2); outline-offset: 2px; }
+    .hc-av { width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #0c1622; flex: none; }
+    .hc-p { flex-wrap: wrap; }
+    .hc-p .hc-sw { flex-basis: 100%; padding-left: 56px; }
+    .hc-del { color: var(--red) !important; }
+</style>
+
+<div class="hst-head">
+    <div>
+        <h2>People</h2>
+        <p>Tag events and feeds with people, then filter the calendar to just their events.</p>
+    </div>
+    <div class="act"><a class="hst-btn ghost" style="display:flex;align-items:center;text-decoration:none" href="{% url 'hub_settings_app' 'hub_calendar' %}">‹ Calendar settings</a></div>
+</div>
+
+{% if note %}<div class="hst-note {{ note.0 }}">{{ note.1 }}</div>{% endif %}
+
+<div class="hst-card">
+    <h3>People</h3>
+    {% for p in people %}
+    <form method="post" class="hst-row hc-p">
+        {% csrf_token %}
+        <input type="hidden" name="id" value="{{ p.id }}">
+        <span class="hc-av" style="background:{{ p.color }}">{{ p.initials }}</span>
+        <div class="lbl"><input class="hst-in txt" name="name" value="{{ p.name }}" maxlength="60" required aria-label="Name"></div>
+        <div class="ctl">
+            <button class="hst-btn ghost hc-del" name="action" value="delete" formnovalidate onclick="return confirm('Remove {{ p.name|escapejs }}? Events stay, just untagged.')">Remove</button>
+            <button class="hst-btn" name="action" value="save">Save</button>
+        </div>
+        <div class="hc-sw">
+            {% for c in palette %}<label><input type="radio" name="color" value="{{ c }}"{% if c == p.color %} checked{% endif %} aria-label="{{ c }}"><span style="--c:{{ c }}"></span></label>{% endfor %}
+        </div>
+    </form>
+    {% empty %}
+    <div class="hst-row"><span class="hst-none">Nobody yet.</span></div>
+    {% endfor %}
+</div>
+
+<form method="post" class="hst-card">
+    {% csrf_token %}
+    <h3>Add a person</h3>
+    <div class="hst-row hc-p">
+        <div class="lbl"><input class="hst-in txt" name="name" maxlength="60" placeholder="Name" required aria-label="Name"></div>
+        <div class="ctl"><button class="hst-btn" name="action" value="add">Add</button></div>
+        <div class="hc-sw" style="padding-left:0">
+            {% for c in palette %}<label><input type="radio" name="color" value="{{ c }}"{% if c == next_color %} checked{% endif %} aria-label="{{ c }}"><span style="--c:{{ c }}"></span></label>{% endfor %}
+        </div>
+    </div>
+</form>
+{% endblock %}

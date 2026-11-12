@@ -1,0 +1,116 @@
+{% extends 'hub_settings/_layout.html' %}
+
+{% block title %}Calendar feeds · Settings{% endblock %}
+
+{% block section %}
+<style>
+    .hc-sw { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hc-sw label { position: relative; width: 34px; height: 34px; cursor: pointer; }
+    .hc-sw input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+    .hc-sw span { position: absolute; inset: 4px; border-radius: 9px; background: var(--c); }
+    .hc-sw input:checked + span { inset: 0; outline: 2px solid #eef3fa; outline-offset: 2px; }
+    .hc-sw input:focus-visible + span { outline: 2px solid var(--acc2); outline-offset: 2px; }
+    .hc-url { width: 100%; }
+    .hc-dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; margin-right: 8px; vertical-align: 1px; }
+    .hc-act { display: flex; gap: 10px; padding: 14px 22px; justify-content: flex-end; }
+    .hc-act .del { margin-right: auto; color: var(--red); }
+    .hc-av { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #0c1622; flex: none; }
+    .hc-help { color: var(--mut); font-size: 14px; line-height: 1.55; padding: 14px 22px; }
+    .hc-help b { color: #cfe4fa; font-weight: 600; }
+    .hc-help code { color: #cfe4fa; font-size: 13px; word-break: break-all; }
+    .hst-row .lbl .warn { color: #f0b54a; }
+</style>
+
+<div class="hst-head">
+    <div>
+        <h2>Calendar feeds</h2>
+        <p>Calendars shown on this hub. They are read-only here and refresh by themselves.</p>
+    </div>
+    <div class="act"><a class="hst-btn ghost" style="display:flex;align-items:center;text-decoration:none" href="{% url 'hub_settings_app' 'hub_calendar' %}">‹ Calendar settings</a></div>
+</div>
+
+{% if note %}<div class="hst-note {{ note.0 }}">{{ note.1 }}</div>{% endif %}
+
+{% for f in feeds %}
+<form method="post" class="hst-card">
+    {% csrf_token %}
+    <input type="hidden" name="id" value="{{ f.id }}">
+    <h3><span class="hc-dot" style="background:{{ f.color }}"></span>{{ f.name }}{% if not f.enabled %} · hidden{% endif %}</h3>
+    <div class="hst-row">
+        <div class="lbl"><b>Name</b></div>
+        <div class="ctl"><input class="hst-in txt" name="name" value="{{ f.name }}" maxlength="80" required></div>
+    </div>
+    <div class="hst-row" style="flex-wrap:wrap">
+        <div class="lbl" style="flex-basis:100%"><b>Address</b>
+            {% if f.last_error %}<small class="warn">⚠ Last refresh failed: {{ f.last_error }}{% if f.fetched_at %} · showing the copy from {{ f.updated }}{% endif %}</small>
+            {% else %}<small>Updated {{ f.updated }}</small>{% endif %}
+        </div>
+        <input class="hst-in hc-url" name="url" value="{{ f.url }}" required>
+    </div>
+    <div class="hst-row">
+        <div class="lbl"><b>Colour</b></div>
+        <div class="ctl hc-sw">
+            {% for c in palette %}<label><input type="radio" name="color" value="{{ c }}"{% if c == f.color %} checked{% endif %} aria-label="{{ c }}"><span style="--c:{{ c }}"></span></label>{% endfor %}
+        </div>
+    </div>
+    <div class="hst-row">
+        <div class="lbl"><b>Show on the calendar</b><small>Turn off to keep the feed but hide its events.</small></div>
+        <div class="ctl"><label class="hst-tog"><input type="checkbox" name="enabled"{% if f.enabled %} checked{% endif %} aria-label="Show on the calendar"><span></span></label></div>
+    </div>
+    {% if people %}
+    <div class="hst-row multi">
+        <div class="lbl"><b>Tag everyone's events with</b><small>For example, tag the high school feed with your daughter so filtering by her shows it.</small></div>
+        <div class="hst-picks">
+            {% for p in people %}
+            <label class="hst-pick"><input type="checkbox" name="people" value="{{ p.id }}"{% if p.id in f.tagged %} checked{% endif %}><span class="hc-av" style="background:{{ p.color }}">{{ p.initials }}</span>{{ p.name }}</label>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    <div class="hc-act">
+        <button class="hst-btn ghost del" name="action" value="delete" formnovalidate onclick="return confirm('Remove {{ f.name|escapejs }}?')">Remove</button>
+        <button class="hst-btn ghost" name="action" value="refresh" formnovalidate>Refresh now</button>
+        <button class="hst-btn" name="action" value="save">Save</button>
+    </div>
+</form>
+{% empty %}
+<div class="hst-card"><div class="hst-row"><span class="hst-none">No feeds yet. Add one below.</span></div></div>
+{% endfor %}
+
+<form method="post" class="hst-card">
+    {% csrf_token %}
+    <h3>Add a feed</h3>
+    <div class="hst-row">
+        <div class="lbl"><b>Name</b></div>
+        <div class="ctl"><input class="hst-in txt" name="name" maxlength="80" placeholder="e.g. MIHS" required></div>
+    </div>
+    <div class="hst-row" style="flex-wrap:wrap">
+        <div class="lbl" style="flex-basis:100%"><b>Address</b><small>An iCal link (https:// or webcal://).</small></div>
+        <input class="hst-in hc-url" name="url" placeholder="https://… or webcal://…" required>
+    </div>
+    <div class="hst-row">
+        <div class="lbl"><b>Colour</b></div>
+        <div class="ctl hc-sw">
+            {% for c in palette %}<label><input type="radio" name="color" value="{{ c }}"{% if c == next_color %} checked{% endif %} aria-label="{{ c }}"><span style="--c:{{ c }}"></span></label>{% endfor %}
+        </div>
+    </div>
+    {% if people %}
+    <div class="hst-row multi">
+        <div class="lbl"><b>Tag its events with</b></div>
+        <div class="hst-picks">
+            {% for p in people %}
+            <label class="hst-pick"><input type="checkbox" name="people" value="{{ p.id }}"><span class="hc-av" style="background:{{ p.color }}">{{ p.initials }}</span>{{ p.name }}</label>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    <div class="hc-act"><button class="hst-btn" name="action" value="add">Add feed</button></div>
+    <div class="hc-help">
+        <b>Where to find the address</b><br>
+        <b>Google Calendar:</b> on a computer, open the calendar's <i>Settings and sharing</i> → <i>Integrate calendar</i> → <i>Secret address in iCal format</i>.<br>
+        <b>iPhone / iCloud:</b> in the Calendar app tap ⓘ next to the calendar, turn on <i>Public Calendar</i> and share the link.<br>
+        <b>Mercer Island schools:</b> <code>https://www.mercerislandschools.org/fs/calendar-manager/events.ics?calendar_ids[]=32</code>
+        (32 = MIHS, 14 = IMS, 30 = District, 15 = MIHS Athletics).
+    </div>
+</form>
+{% endblock %}
