@@ -252,6 +252,17 @@ class SettingsPageTests(TestCase):
         page = self.client.get(reverse("hub_calendar_feeds"))
         self.assertContains(page, "Added MIHS.")
         self.assertContains(page, "Updated just now")
+        self.assertContains(page, '<details class="hst-card hc-feed" open>')
+        self.assertContains(page, 'id="hc-add" hidden')
+        self.assertNotContains(self.client.get(reverse("hub_calendar_feeds")), "<details class=\"hst-card hc-feed\" open>")
+
+    def test_rejected_new_feed_keeps_the_add_form_open(self):
+        self.client.force_login(self.admin)
+        Feed.objects.create(name="Old", url="https://example.org/old.ics", order=0)
+        r = self.client.post(reverse("hub_calendar_feeds"), {"action": "add", "name": "Bad", "url": "ftp://example.org/x"})
+        self.assertEqual(r.status_code, 200)
+        self.assertNotContains(r, 'id="hc-add" hidden')
+        self.assertContains(r, 'id="hc-addbtn" hidden')
 
     def test_feed_that_fails_to_load_is_kept_with_error(self):
         self.client.force_login(self.admin)

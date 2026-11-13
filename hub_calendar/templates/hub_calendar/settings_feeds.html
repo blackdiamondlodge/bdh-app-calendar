@@ -19,6 +19,19 @@
     .hc-help b { color: #cfe4fa; font-weight: 600; }
     .hc-help code { color: #cfe4fa; font-size: 13px; word-break: break-all; }
     .hst-row .lbl .warn { color: #f0b54a; }
+    .hc-feed { margin-bottom: 10px; }
+    .hc-feed > summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 16px 22px; cursor: pointer; user-select: none; }
+    .hc-feed > summary::-webkit-details-marker { display: none; }
+    .hc-feed > summary .hc-dot { margin: 0; flex: none; }
+    .hc-feed > summary .nm { font-size: 16px; font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hc-feed > summary .st { color: var(--mut); font-size: 13.5px; white-space: nowrap; }
+    .hc-feed > summary .st.warn { color: #f0b54a; }
+    .hc-feed > summary .chev { color: var(--mut); font-size: 18px; transition: transform .15s; }
+    .hc-feed[open] > summary { border-bottom: 1px solid var(--line); }
+    .hc-feed[open] > summary .chev { transform: rotate(90deg); }
+    .hc-feed.off > summary .nm { color: var(--mut); }
+    .hc-addbtn { width: 100%; margin: 8px 0 18px; }
+    .hc-add[hidden] { display: none; }
 </style>
 
 <div class="hst-head">
@@ -32,10 +45,16 @@
 {% if note %}<div class="hst-note {{ note.0 }}">{{ note.1 }}</div>{% endif %}
 
 {% for f in feeds %}
-<form method="post" class="hst-card">
+<details class="hst-card hc-feed{% if not f.enabled %} off{% endif %}"{% if f.id == open_id %} open{% endif %}>
+<summary>
+    <span class="hc-dot" style="background:{{ f.color }}"></span>
+    <span class="nm">{{ f.name }}</span>
+    {% if f.last_error %}<span class="st warn">⚠ Refresh failed</span>{% elif not f.enabled %}<span class="st">Hidden</span>{% else %}<span class="st">Updated {{ f.updated }}</span>{% endif %}
+    <span class="chev" aria-hidden="true">›</span>
+</summary>
+<form method="post">
     {% csrf_token %}
     <input type="hidden" name="id" value="{{ f.id }}">
-    <h3><span class="hc-dot" style="background:{{ f.color }}"></span>{{ f.name }}{% if not f.enabled %} · hidden{% endif %}</h3>
     <div class="hst-row">
         <div class="lbl"><b>Name</b></div>
         <div class="ctl"><input class="hst-in txt" name="name" value="{{ f.name }}" maxlength="80" required></div>
@@ -73,11 +92,14 @@
         <button class="hst-btn" name="action" value="save">Save</button>
     </div>
 </form>
+</details>
 {% empty %}
-<div class="hst-card"><div class="hst-row"><span class="hst-none">No feeds yet. Add one below.</span></div></div>
+<div class="hst-card"><div class="hst-row"><span class="hst-none">No feeds yet.</span></div></div>
 {% endfor %}
 
-<form method="post" class="hst-card">
+<button type="button" class="hst-btn ghost hc-addbtn" id="hc-addbtn"{% if add_open %} hidden{% endif %}>+ Add calendar feed</button>
+
+<form method="post" class="hst-card hc-add" id="hc-add"{% if not add_open %} hidden{% endif %}>
     {% csrf_token %}
     <h3>Add a feed</h3>
     <div class="hst-row">
@@ -104,7 +126,10 @@
         </div>
     </div>
     {% endif %}
-    <div class="hc-act"><button class="hst-btn" name="action" value="add">Add feed</button></div>
+    <div class="hc-act">
+        <button type="button" class="hst-btn ghost" id="hc-addcancel">Cancel</button>
+        <button class="hst-btn" name="action" value="add">Add feed</button>
+    </div>
     <div class="hc-help">
         <b>Where to find the address</b><br>
         <b>Google Calendar:</b> on a computer, open the calendar's <i>Settings and sharing</i> → <i>Integrate calendar</i> → <i>Secret address in iCal format</i>.<br>
@@ -113,4 +138,16 @@
         (32 = MIHS, 14 = IMS, 30 = District, 15 = MIHS Athletics).
     </div>
 </form>
+<script>
+(function () {
+    var btn = document.getElementById('hc-addbtn'), form = document.getElementById('hc-add');
+    btn.addEventListener('click', function () {
+        btn.hidden = true; form.hidden = false;
+        form.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
+    document.getElementById('hc-addcancel').addEventListener('click', function () {
+        form.reset(); form.hidden = true; btn.hidden = false;
+    });
+})();
+</script>
 {% endblock %}
