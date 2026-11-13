@@ -422,7 +422,7 @@
     main.innerHTML = '<div class="wk"><div class="wrow">' + head + '</div><div class="wrow wad noscroll">' + ad + '</div>' +
       '<div class="wmark" id="wm-top">' + marks + '</div>' +
       '<div style="position:relative;flex:1;min-height:0;display:flex">' +
-      '<div class="wscroll noscroll" id="wscroll"><div class="wrow">' + gut + cols + '</div></div>' +
+      '<div class="wscroll noscroll" id="wscroll" data-scroll-hint="off"><div class="wrow">' + gut + cols + '</div></div>' +
       '<div class="sarr up" id="w-up"><i class="fas fa-chevron-up"></i></div><div class="sarr down" id="w-down"><i class="fas fa-chevron-down"></i></div></div>' +
       '<div class="wmark" id="wm-bot">' + marks + '</div></div>';
     var sc = $('wscroll');
@@ -469,7 +469,7 @@
                 esc(e.title) + '<small>' + esc(src ? src.name : '') + (e.location ? ' · ' + esc(e.location) : '') + '</small></span></div>';
       });
     }
-    main.innerHTML = '<div class="ag noscroll" id="ag"><div class="ag-in">' + (any ? html : '<div class="empty">Nothing in the next six weeks.</div>') + '</div></div>' +
+    main.innerHTML = '<div class="ag noscroll" id="ag" data-scroll-hint="off"><div class="ag-in">' + (any ? html : '<div class="empty">Nothing in the next six weeks.</div>') + '</div></div>' +
                      '<div class="sarr down hidden" id="ag-down"><i class="fas fa-chevron-down"></i></div>';
     var ag = $('ag');
     function hint() { $('ag-down').classList.toggle('hidden', ag.scrollTop + ag.clientHeight >= ag.scrollHeight - 2); }
