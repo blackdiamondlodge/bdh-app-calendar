@@ -331,9 +331,16 @@ def feeds_page(request):
                 note = ("ok", f"Removed {feed.name}.")
         except ValueError as exc:
             note = ("bad", str(exc))
+        # Keep the feed that was just touched expanded; reopen the add form if it failed.
+        open_id = feed.pk if feed and action != "delete" else None
+        add_open = action == "add" and not open_id
         if note and note[0] == "ok":
             request.session["hub_calendar_note"] = note
+            request.session["hub_calendar_open"] = open_id
             return redirect("hub_calendar_feeds")
+    else:
+        open_id = request.session.pop("hub_calendar_open", None)
+        add_open = False
     note = note or request.session.pop("hub_calendar_note", None)
     feeds = list(Feed.objects.prefetch_related("people"))
     for f in feeds:
@@ -342,6 +349,7 @@ def feeds_page(request):
     return render(request, "hub_calendar/settings_feeds.html", {
         "active": cal.APP, "feeds": feeds, "people": Person.objects.all(),
         "palette": PALETTE, "note": note, "next_color": PALETTE[len(feeds) % len(PALETTE)],
+        "open_id": open_id, "add_open": add_open or not feeds,
     })
 
 
