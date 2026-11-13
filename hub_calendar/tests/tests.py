@@ -294,3 +294,16 @@ class StatusTests(TestCase):
     def test_empty(self):
         with patch.object(cal, "kick_refresh", return_value=False):
             self.assertEqual(homepage.status().text, "Nothing this week")
+
+
+class SiteTzTests(TestCase):
+    def test_follows_hub_location(self):
+        from bdh_sdk.location import Location
+        with patch.object(cal, "hub_location", return_value=Location(timezone="America/Vancouver")):
+            self.assertEqual(str(cal.site_tz()), "America/Vancouver")
+
+    @override_settings(TIME_ZONE="America/Toronto")
+    def test_falls_back_to_django_time_zone(self):
+        with patch.object(cal, "hub_location", return_value=None):
+            self.assertEqual(str(cal.site_tz()), "America/Toronto")
+
