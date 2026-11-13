@@ -1,7 +1,7 @@
 """Calendar logic: who is looking, feed refresh, and expanding events into a date range.
 
-Times are handled as *local wall-clock* times in the site's timezone
-(``HUB_LOCATION["timezone"]``); the database stores aware UTC datetimes.
+Times are handled as *local wall-clock* times in the hub's time zone
+(Settings > Location, via ``bdh_sdk.location``); the database stores aware UTC datetimes.
 """
 import hashlib
 import logging
@@ -10,6 +10,7 @@ from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 from bdh_sdk.auth import is_admin
+from bdh_sdk.location import location as hub_location
 from bdh_sdk.settings import app_setting
 from dateutil import rrule
 from django.conf import settings
@@ -31,7 +32,8 @@ REFRESH_LOCK = "hub_calendar:refreshing"
 # ---- time ---------------------------------------------------------------
 
 def site_tz():
-    name = (getattr(settings, "HUB_LOCATION", None) or {}).get("timezone") or settings.TIME_ZONE
+    where = hub_location()
+    name = (where.timezone if where else "") or settings.TIME_ZONE
     try:
         return ZoneInfo(name)
     except Exception:
