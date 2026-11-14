@@ -1,7 +1,7 @@
 """Calendar logic: who is looking, feed refresh, and expanding events into a date range.
 
 Times are handled as *local wall-clock* times in the hub's time zone
-(Settings > Location, via ``bdh_sdk.location``); the database stores aware UTC datetimes.
+(Settings > General, via ``bdh_sdk.location``); the database stores aware UTC datetimes.
 """
 import hashlib
 import logging
