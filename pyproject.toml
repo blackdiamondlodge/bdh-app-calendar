@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bdh-app-calendar"
-version = "1.0.3"
+version = "1.0.4"
 description = "Black Diamond Hub app: a family calendar merging iCal feeds with events added on the hub"
 readme = "README.md"
 license = { text = "MIT" }
